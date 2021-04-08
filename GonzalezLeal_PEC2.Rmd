@@ -113,8 +113,39 @@ summary(fifa.df.sub$Rating)
 
 Efectivamente, si nos fijamos en los valores de media y mediana, podemos ver que se encuentran prácticamente solapadas.
 
+Esto también lo podemos ver con un gráfico Q-Q
+```{r}
+qqnorm(fifa.df.sub$Rating)
+qqline(fifa.df.sub$Rating)
+```
+
+En donde vemos que el error de los puntos de observación con respecto a la recta es mínimo.
 
 ## Intervalo de confianza
+Vamos a establecer el intervalo de confianza de esta variable a partir de su media, y calculando su desviación estándar.
+```{r}
+n <- length(fifa.df.sub$Rating)
+print(paste('Número de observaciones: ', n))
+
+# Cálculo de la desviación estándar
+sd <- sd(fifa.df.sub$Rating)
+
+# Cálculo de z_alpha/2
+#z_alpha_1_2 <- qnorm(0.025)
+
+
+alpha <- 1-0.95
+alpha
+SE <- sd / sqrt(n)
+SE
+z <- qnorm(alpha/2, lower.tail = F)
+z
+L <- mean(fifa.df.sub$Rating) - z*SE
+U <- mean(fifa.df.sub$Rating) + z*SE
+print(paste('Los niveles de confianza se encuentran definidos en el rango [',round(L, 2),', ', round(U, 2), ']')) 
+
+```
+
 
 # Diferencias entre jugadores
 
@@ -159,4 +190,5 @@ Efectivamente, si nos fijamos en los valores de media y mediana, podemos ver que
 ## Resultados e interpretación
 
 # Resumen ejecutivo
+
 
