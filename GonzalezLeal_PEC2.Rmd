@@ -1,0 +1,162 @@
+---
+title: "Analítica descriptiva e inferencial del Fifa 2017"
+author: "Jesús González"
+date: "23/4/2021"
+output:
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+    
+  pdf_document:
+    highlight: zenburn
+    toc: yes
+    
+  word_document: default
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+------------------------------------------------------------------------
+
+```{r}
+#install.packages("tidyverse")
+library(tidyverse) 
+library(stringr) 
+library(dplyr) 
+library(lubridate) 
+library(ggplot2)
+
+# Winsor package
+# https://www.rdocumentation.org/packages/psych/versions/2.0.12/topics/winsor
+
+#install.packages('psych')
+
+#library(psych)
+
+#ggbiplot package
+
+#https://www.rdocumentation.org/packages/ggbiplot/versions/0.55
+#https://www.rdocumentation.org/packages/ggbiplot/versions/0.55/topics/ggbiplot
+
+#library(devtools)
+#install_github("vqv/ggbiplot")
+#library(ggbiplot)
+
+
+```
+
+# Introducción
+
+# Lectura del fichero
+
+```{r}
+fifa.df <- read.csv(file="./Data/fifa_clean.csv", encoding = "UTF8", stringsAsFactors = F)
+paste0("Número de observaciones: ", nrow(fifa.df),". Número de variables: ", ncol(fifa.df))
+```
+Verificamos si existen duplicados en el identificador.
+
+```{r}
+if (length(fifa.df$ID) == length(unique(fifa.df$ID))) {
+  print("No hay diferencias en el ID")} else {print("Existen diferencias en el ID")}
+```
+Convertimos a factor los literales.
+```{r}
+column_name <- c('Nationality','National_Position', 'Club', 'Club_Position', 'Preffered_Foot', 'Preffered_Position', 'Work_Rate')
+for (col in column_name) {
+  fifa.df[,col] <- factor(fifa.df[,col])
+}
+```
+
+Para el estudio, se va a investigar las variables: Rating, Ball_Control y Dribbling. Se va a realizar una subselección.
+
+```{r}
+column_name <- c('ID', 'Name', 'Nationality', 'Rating', 'Ball_Control', 'Dribbling' )
+fifa.df.sub <- fifa.df[, column_name]
+```
+
+
+Revisamos las primeras líneas de las observaciones cargadas.
+
+```{r}
+head(fifa.df.sub, 5)
+```
+
+Revisamos las estadísticas básicas.
+```{r}
+summary(fifa.df.sub)
+```
+
+
+# Rating de los jugadores
+La variable Rating muestra la puntuación del jugador. 
+
+## Análisis visual
+A continuación se va a mostrar visualmente que distribución sigue esta variable.
+
+```{r}
+ggplot(fifa.df.sub, aes(x= Rating)) + 
+  geom_histogram(binwidth = 1, fill="#69b3a2", color="#e9ecef", alpha=0.9) + 
+  geom_vline(xintercept = mean(fifa.df.sub$Rating), colour="blue", linetype = "longdash")
+```
+Podemos comprobar como la puntuación sigue una distribución normal casi centrada en la media. 
+```{r}
+summary(fifa.df.sub$Rating)
+```
+
+Efectivamente, si nos fijamos en los valores de media y mediana, podemos ver que se encuentran prácticamente solapadas.
+
+
+## Intervalo de confianza
+
+# Diferencias entre jugadores
+
+## Pregunta de investigación
+
+## Representación visual
+
+## Hipótesis nula y alternativa
+
+## Método
+
+## Cálculos
+
+## Tabla de resultados
+
+## Interpretación
+
+# Comparación por pares
+
+## Jugador más similar
+
+## Muestras
+
+## Hipótesis nula y alternativa
+
+## Método
+
+## Cálculos
+
+## Interpretación
+
+## Reflexión
+
+# Comparación entre clubes
+
+## Hipótesis nula y alternativa
+
+## Método
+
+## Cálculos
+
+## Resultados e interpretación
+
+# Resumen ejecutivo
+
