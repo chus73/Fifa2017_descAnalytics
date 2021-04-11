@@ -37,6 +37,7 @@ library(gridExtra)
 library(grid)
 library(ggplot2)
 library(lattice)
+library(kableExtra)
 
 # Winsor package
 # https://www.rdocumentation.org/packages/psych/versions/2.0.12/topics/winsor
@@ -224,7 +225,6 @@ que los zurdos consiguen mejor puntuación en las tres variables.
 
 Planteado de un modo más matemático:
 
-
 $$
 \left\{
 \begin{array}{ll}
@@ -239,11 +239,130 @@ Dribbling, y dentro del intervalo de confianza (NC) del 95 %.
 
 ## Método
 
+En este apartado vamos a responder una serie de cuestiones que nos
+ayudarán a escoger el método adecuado para validar la hipótesis
+planteada.
+
+-   **Tipo de contraste**. En este estudio estamos valorando dos
+    muestras independientes de tamaños diferentes. Para ello
+    realizaremos un contraste sobre la media.
+
+-   **Normalidad de la muestra**: El número de muestras es
+    suficientemente grande como para poder aplicar el [teorema del
+    límite central]{.ul} (TLC) que dice que la media poblacional **se
+    comporta** como una normal si el número de muestras es
+    suficientemente grande, estimándose como suficiente para la gran
+    mayoría de los casos cuando se superan las 30 observaciones.
+
+**Propiedades del test a aplicar**:
+
+-   **Test paramétrico o No paramétrico**
+
+-   **Test bilateral o Unilateral:** Si examinamos la hipótesis
+    alternativa ($H_1$), estamos hablando de un contraste unilateral por
+    la derecha.
+
+-   **Homocedasticidad o heterocedasticidad:** Para resolver este
+    parámetro nos fijaremos en la variabilidad de las muestras aplicando
+    un F test.
+
+```{r  echo=FALSE, messages=FALSE}
+columns_names <- c('Rating', 'Ball_Control', 'Dribbling') 
+var_table <- data.frame(matrix(ncol=5, nrow = 0)) 
+column_names_table <- c('Variable', 'F test', 'p valor', 'NC1', 'NC2')
+for (col in columns_names){
+  out <- var.test(x=left_gamers[,col], y=right_gamers[,col])
+  var_table <- rbind(var_table, c(col, round(out$statistic,4), out$p.value, round(out$conf.int[1],4), round(out$conf.int[2],4)))
+}
+colnames(var_table) <- column_names_table
+var_table
+```
+
+El test F de Snedecor establece como hipótesis nula la homogeneidad de
+las varianzas. Los p-valores encontrados nos indican que podemos
+rechazar la \$H\_{0}\$, encontrándonos con que las muestras de las tres
+variables observadas presentan **heterocedasticidad**.
+
 ## Cálculos
+
+Ahora procederemos a calcular el estadístico de contraste, el valor
+crítico y el valor de $p$ .
+
+```{r}
+# Definimos el intervalo de confianza
+NC <- 0.95
+alpha <- 1-NC
+# Cálculo del valor crítico
+valor_critico <- qnorm(alpha)
+# Cálculo de las medias
+mean_left <- mean(data[data$type == 'left', 'Rating'])
+mean_right <- mean(data[data$type == 'right', 'Rating'])
+# Desviación estándar
+sd_left <- sd(data[data$type == 'left', 'Rating'])
+sd_right <- sd(data[data$type == 'right', 'Rating'])
+# Número de muestras
+n_left <- length(data[data$type == 'left', 'Rating'])
+n_right <- length(data[data$type == 'right', 'Rating'])
+
+# Cálculo del estimador
+t <- (mean_left - mean_right) / sqrt((sd_left^2/n_left) + (sd_right^2/n_right))
+
+```
+
+```{r}
+t_2_sample_unknow_var <- function(df, column_name, NC){
+  # El intervalo de confianza es dado (95% por defecto)
+
+  alpha <- 1-NC
+  # Cálculo del valor crítico
+  vc <- qnorm(alpha)
+  # Cálculo de las medias
+  mean_left <- mean(df[df$type == 'left', column_name])
+  mean_right <- mean(df[df$type == 'right', column_name])
+  # Desviación estándar
+  sd_left <- sd(df[df$type == 'left', column_name])
+  sd_right <- sd(df[df$type == 'right', column_name])
+  # Número de muestras
+  n_left <- length(df[df$type == 'left', column_name])
+  n_right <- length(df[df$type == 'right', column_name])
+
+  # Cálculo del estimador
+  t <- (mean_left - mean_right) / sqrt((sd_left^2/n_left) + (sd_right^2/n_right))  
+  # Resultado
+  return(c(column_name, t, abs(vc)))
+}
+column_names <- c('Rating', 'Ball_Control', 'Dribbling')
+t2_sample_table <- data.frame(matrix(ncol=3, nrow = 0))
+for (col in column_names){
+  out <- t_2_sample_unknow_var(data, col, 0.95)
+  t2_sample_table <- rbind(t2_sample_table, out)
+}
+names(t2_sample_table) <- c("Variable", "t-valor", "valor_critico")
+t2_sample_table
+```
+
+```{r}
+t.test(data[data$type == 'left', 'Rating'], 
+       data[data$type == 'right', 'Rating'],
+       alternative= "greater",
+       var.equal= F)
+```
 
 ## Tabla de resultados
 
+Mostramos los resultados
+
+```{r}
+t2_sample_table %>% kable() %>% kable_styling()
+```
+
 ## Interpretación
+
+Como podemos interpretar de los resultados, en las tres variables
+estudiadas el valor observado (t-valor) es mayor que el valor crítico lo
+que permite rechazar la hipótesis nula aceptando que [los jugadores
+zurdos obtienen mejores puntuaciones que los diestros]{.ul} para estas
+variables.
 
 # Comparación por pares
 
