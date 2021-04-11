@@ -33,6 +33,10 @@ library(stringr)
 library(dplyr) 
 library(lubridate) 
 library(ggplot2)
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
 
 # Winsor package
 # https://www.rdocumentation.org/packages/psych/versions/2.0.12/topics/winsor
@@ -61,13 +65,16 @@ library(ggplot2)
 fifa.df <- read.csv(file="./Data/fifa_clean.csv", encoding = "UTF8", stringsAsFactors = F)
 paste0("Número de observaciones: ", nrow(fifa.df),". Número de variables: ", ncol(fifa.df))
 ```
+
 Verificamos si existen duplicados en el identificador.
 
 ```{r}
 if (length(fifa.df$ID) == length(unique(fifa.df$ID))) {
   print("No hay diferencias en el ID")} else {print("Existen diferencias en el ID")}
 ```
+
 Convertimos a factor los literales.
+
 ```{r}
 column_name <- c('Nationality','National_Position', 'Club', 'Club_Position', 'Preffered_Foot', 'Preffered_Position', 'Work_Rate')
 for (col in column_name) {
@@ -75,13 +82,13 @@ for (col in column_name) {
 }
 ```
 
-Para el estudio, se va a investigar las variables: Rating, Ball_Control y Dribbling. Se va a realizar una subselección.
+Para el estudio, se va a investigar las variables: Rating, Ball_Control
+y Dribbling. Se va a realizar una subselección.
 
 ```{r}
-column_name <- c('ID', 'Name', 'Nationality', 'Rating', 'Ball_Control', 'Dribbling' )
+column_name <- c('ID', 'Name', 'Nationality', 'Preffered_Foot', 'Club_Position', 'Rating', 'Ball_Control', 'Dribbling' )
 fifa.df.sub <- fifa.df[, column_name]
 ```
-
 
 Revisamos las primeras líneas de las observaciones cargadas.
 
@@ -90,40 +97,56 @@ head(fifa.df.sub, 5)
 ```
 
 Revisamos las estadísticas básicas.
+
 ```{r}
 summary(fifa.df.sub)
 ```
 
-
 # Rating de los jugadores
-La variable Rating muestra la puntuación del jugador. 
+
+La variable Rating muestra la puntuación del jugador.
 
 ## Análisis visual
-A continuación se va a mostrar visualmente que distribución sigue esta variable.
+
+A continuación se va a mostrar visualmente que distribución sigue esta
+variable.
 
 ```{r}
 ggplot(fifa.df.sub, aes(x= Rating)) + 
   geom_histogram(binwidth = 1, fill="#69b3a2", color="#e9ecef", alpha=0.9) + 
   geom_vline(xintercept = mean(fifa.df.sub$Rating), colour="blue", linetype = "longdash")
 ```
-Podemos comprobar como la puntuación sigue una distribución normal casi centrada en la media. 
+
+Podemos comprobar como la variable puntuación sigue una distribución
+normal y prácticamente simétrica. Se muestra con la línea azúl que
+indica la media, viéndose que sigue una distribución casi centrada en la
+media.
+
 ```{r}
 summary(fifa.df.sub$Rating)
 ```
 
-Efectivamente, si nos fijamos en los valores de media y mediana, podemos ver que se encuentran prácticamente solapadas.
+Efectivamente, esta simetría la podemos comprobar al fijarnos en los
+valores de media y mediana, podemos ver que se encuentran prácticamente
+solapadas.
 
 Esto también lo podemos ver con un gráfico Q-Q
+
 ```{r}
 qqnorm(fifa.df.sub$Rating)
 qqline(fifa.df.sub$Rating)
 ```
 
-En donde vemos que el error de los puntos de observación con respecto a la recta es mínimo.
+En donde vemos que el error de los puntos de observación con respecto a
+la recta es mínimo.
 
 ## Intervalo de confianza
-Vamos a establecer el intervalo de confianza de esta variable a partir de su media, y calculando su desviación estándar.
+
+Vamos a establecer el intervalo de confianza de esta variable a partir
+de su media, y calculando su desviación estándar.
+
 ```{r}
+NC <- 0.95
 n <- length(fifa.df.sub$Rating)
 print(paste('Número de observaciones: ', n))
 
@@ -133,8 +156,7 @@ sd <- sd(fifa.df.sub$Rating)
 # Cálculo de z_alpha/2
 #z_alpha_1_2 <- qnorm(0.025)
 
-
-alpha <- 1-0.95
+alpha <- 1-NC
 alpha
 SE <- sd / sqrt(n)
 SE
@@ -142,18 +164,78 @@ z <- qnorm(alpha/2, lower.tail = F)
 z
 L <- mean(fifa.df.sub$Rating) - z*SE
 U <- mean(fifa.df.sub$Rating) + z*SE
-print(paste('Los niveles de confianza se encuentran definidos en el rango [',round(L, 2),', ', round(U, 2), ']')) 
+print(paste('Los niveles de confianza se encuentran definidos en el rango [',round(L, 2),', ', round(U, 2), '] para un nivel de confianza del ', NC*100, '%')) 
 
 ```
 
-
 # Diferencias entre jugadores
+
+En este apartado, se va a comprobar si los jugadores zurdos tienen mejor
+control de la pelota (variable Ball_Control), valoración (Rating) y
+mejor Dribbling que lo diestros. Como paso previo vamos a diferenciar en
+dos subsets a los jugadores zurdos de los diestros, eliminando a los
+porteros (Código GK de la variable Club_Position).
+
+```{r}
+
+left_gamers <- fifa.df.sub %>% filter(Club_Position!='GK' & Preffered_Foot=='Left') %>% select('ID', 'Rating', 'Ball_Control', 'Dribbling')
+
+right_gamers <- fifa.df.sub %>% filter(Club_Position!='GK' & Preffered_Foot=='Right') %>% select('ID', 'Rating', 'Ball_Control', 'Dribbling')
+```
 
 ## Pregunta de investigación
 
+La pregunta que se quiere responder es si los valores de las tres
+variables a estudiar son significativamente mayores entre los jugadores
+zurdos y los diestros. Estamos ante un caso de contraste unilateral de
+dos muestras poblacionales independientes.
+
+Por tanto, definiendo la hipótesis nula como que no hay diferencias por
+el hecho de ser diestros o zurdos, tendríamos que la hipótesis
+alternativa es aquella en la que los zurdos consiguen mejor puntuación
+en las tres variables.
+
+Distribución unilateral por la derecha.
+
 ## Representación visual
 
+```{r}
+left_gamers$type <- 'left'
+right_gamers$type <- 'right'
+columns_names <- c('Rating', 'Ball_Control', 'Dribbling', 'type')
+data <- merge(x=left_gamers[, columns_names], y =right_gamers[,columns_names], all=T )
+```
+
+```{r}
+
+p1 <- ggplot(data=data,aes(x=type, y=Rating,color=type))+geom_boxplot()
+p2 <- ggplot(data=data,aes(x=type, y=Ball_Control,color=type))+geom_boxplot()
+p3 <- ggplot(data=data,aes(x=type, y=Dribbling,color=type))+geom_boxplot()
+grid.arrange(p1, p2, p3, ncol=3, top= 'Boxplox Compare main attributes')
+
+```
+
 ## Hipótesis nula y alternativa
+
+A partir de la pregunta realizada definimos la hipótesis nula como que
+no hay diferencias por el hecho de ser diestros o zurdos. En
+contraposición, tendríamos que la hipótesis alternativa es aquella en la
+que los zurdos consiguen mejor puntuación en las tres variables.
+
+Planteado de un modo más matemático:
+
+
+$$
+\left\{
+\begin{array}{ll}
+H_{0}: &  \mu_{left} <= \mu_{right}\\
+H_{1}: & \mu_{left} > \mu_{right}
+\end{array}
+\right.
+$$
+
+Para cada una de las tres variables observadas, Rating, Ball control y
+Dribbling, y dentro del intervalo de confianza (NC) del 95 %.
 
 ## Método
 
@@ -190,5 +272,3 @@ print(paste('Los niveles de confianza se encuentran definidos en el rango [',rou
 ## Resultados e interpretación
 
 # Resumen ejecutivo
-
-
