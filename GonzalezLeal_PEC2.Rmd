@@ -27,7 +27,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ------------------------------------------------------------------------
 
 ```{r}
-#install.packages("tidyverse")
 library(tidyverse) 
 library(stringr) 
 library(dplyr) 
@@ -38,23 +37,6 @@ library(grid)
 library(ggplot2)
 library(lattice)
 library(kableExtra)
-
-# Winsor package
-# https://www.rdocumentation.org/packages/psych/versions/2.0.12/topics/winsor
-
-#install.packages('psych')
-
-#library(psych)
-
-#ggbiplot package
-
-#https://www.rdocumentation.org/packages/ggbiplot/versions/0.55
-#https://www.rdocumentation.org/packages/ggbiplot/versions/0.55/topics/ggbiplot
-
-#library(devtools)
-#install_github("vqv/ggbiplot")
-#library(ggbiplot)
-
 
 ```
 
@@ -105,7 +87,8 @@ summary(fifa.df.sub)
 
 # Rating de los jugadores
 
-La variable Rating muestra la puntuación del jugador.
+En el primer apartado de este estudio, interesa investigar la variable
+Rating. Ésta, muestra la puntuación del jugador.
 
 ## Análisis visual
 
@@ -118,20 +101,22 @@ ggplot(fifa.df.sub, aes(x= Rating)) +
   geom_vline(xintercept = mean(fifa.df.sub$Rating), colour="blue", linetype = "longdash")
 ```
 
-Podemos comprobar como la variable puntuación sigue una distribución
-normal y prácticamente simétrica. Se muestra con la línea azúl que
-indica la media, viéndose que sigue una distribución casi centrada en la
-media.
+De la observación de la salida del histograma, podemos comprobar como la
+variable puntuación sigue una distribución muy similar a la normal y
+prácticamente simétrica. Se muestra con la línea azúl de referencia que
+indica la media de la serie. Visualmente se comprueba que la
+distribución se encuentra casi centrada en la media.
 
 ```{r}
 summary(fifa.df.sub$Rating)
 ```
 
-Efectivamente, esta simetría la podemos comprobar al fijarnos en los
-valores de media y mediana, podemos ver que se encuentran prácticamente
-solapadas.
+Efectivamente, esta simetría la podemos comprobar numéricamente al
+fijarnos en los valores de media y mediana, podemos ver que se
+encuentran prácticamente solapadas.
 
-Esto también lo podemos ver con un gráfico Q-Q
+Podemos apoyar aún más nuestra afirmación realizando un gráfico Q-Q para
+esta variable.
 
 ```{r}
 qqnorm(fifa.df.sub$Rating)
@@ -158,16 +143,18 @@ sd <- sd(fifa.df.sub$Rating)
 #z_alpha_1_2 <- qnorm(0.025)
 
 alpha <- 1-NC
-alpha
 SE <- sd / sqrt(n)
-SE
 z <- qnorm(alpha/2, lower.tail = F)
-z
 L <- mean(fifa.df.sub$Rating) - z*SE
 U <- mean(fifa.df.sub$Rating) + z*SE
 print(paste('Los niveles de confianza se encuentran definidos en el rango [',round(L, 2),', ', round(U, 2), '] para un nivel de confianza del ', NC*100, '%')) 
 
 ```
+
+Hemos mostrado el número de observaciones para apoyar la normalizad por
+el teorema del límite centrar (TLC). Por lo tanto, y debido a que la
+distribución sigue una normal, el nivel crítico se calcula con la mitad
+de alfa para un nivel de confianza (NC) del 95%.
 
 # Diferencias entre jugadores
 
@@ -256,7 +243,7 @@ planteada.
 
 **Propiedades del test a aplicar**:
 
--   **Test paramétrico o No paramétrico**
+-   **Test paramétrico o No paramétrico.** La normalidad de la muestra justificadas en el punto anterior nos permite afirmar que podemos aplicar un test paramétrico.
 
 -   **Test bilateral o Unilateral:** Si examinamos la hipótesis
     alternativa ($H_1$), estamos hablando de un contraste unilateral por
@@ -286,28 +273,9 @@ variables observadas presentan **heterocedasticidad**.
 ## Cálculos
 
 Ahora procederemos a calcular el estadístico de contraste, el valor
-crítico y el valor de $p$ .
-
-```{r}
-# Definimos el intervalo de confianza
-NC <- 0.95
-alpha <- 1-NC
-# Cálculo del valor crítico
-valor_critico <- qnorm(alpha)
-# Cálculo de las medias
-mean_left <- mean(data[data$type == 'left', 'Rating'])
-mean_right <- mean(data[data$type == 'right', 'Rating'])
-# Desviación estándar
-sd_left <- sd(data[data$type == 'left', 'Rating'])
-sd_right <- sd(data[data$type == 'right', 'Rating'])
-# Número de muestras
-n_left <- length(data[data$type == 'left', 'Rating'])
-n_right <- length(data[data$type == 'right', 'Rating'])
-
-# Cálculo del estimador
-t <- (mean_left - mean_right) / sqrt((sd_left^2/n_left) + (sd_right^2/n_right))
-
-```
+crítico y el valor de $p$, teniendo en cuenta todo las características
+de la muestra que hemos visto anteriormente (Contraste de dos muestras
+independientes sobre la media con varianzas desconocidas).
 
 ```{r}
 t_2_sample_unknow_var <- function(df, column_name, NC){
@@ -338,19 +306,13 @@ for (col in column_names){
   t2_sample_table <- rbind(t2_sample_table, out)
 }
 names(t2_sample_table) <- c("Variable", "t-valor", "valor_critico")
-t2_sample_table
-```
-
-```{r}
-t.test(data[data$type == 'left', 'Rating'], 
-       data[data$type == 'right', 'Rating'],
-       alternative= "greater",
-       var.equal= F)
+#t2_sample_table
 ```
 
 ## Tabla de resultados
 
-Mostramos los resultados
+Mostramos los resultados para las tres variables de la muestra de
+jugadores
 
 ```{r}
 t2_sample_table %>% kable() %>% kable_styling()
@@ -359,14 +321,112 @@ t2_sample_table %>% kable() %>% kable_styling()
 ## Interpretación
 
 Como podemos interpretar de los resultados, en las tres variables
-estudiadas el valor observado (t-valor) es mayor que el valor crítico lo
-que permite rechazar la hipótesis nula aceptando que [los jugadores
+estudiadas el valor observado (t-valor) es mayor que el valor crítico
+
+      t valor > valor crítico
+
+lo que permite rechazar la hipótesis nula aceptando que [los jugadores
 zurdos obtienen mejores puntuaciones que los diestros]{.ul} para estas
 variables.
 
 # Comparación por pares
+Nos preguntamos si obtendríamos el mismo resultado si comparásemos los jugadores de campo zurdos
+con aquellos jugadores de campo diestros que tienen un peso, altura y edad similar. Para dar
+respuesta a esta pregunta, realizaremos un proceso similar al denominado propensity score matching, aunque
+un poco simplificado.
+
+El procedimiento se basa en calcular la distancia euclídea entre los vectores de jugadores zurdos y  diestros para cada una de las variables.
+El resultado serán dos muestras, una primera con los jugadores zurdos, y por cada posición de jugador, en la segunda muestra encontraremos el jugador diestro más cercano, existiendo una relación 1 a 1 por cada jugador de cada muestra. 
 
 ## Jugador más similar
+Implantamos la función euclídea que nos mostrará la distancia entre los vectores.
+
+```{r}
+euclidean <- function( x1, x2 ){
+return ( sqrt( sum ( (x1-x2)^2 ) ) )
+}
+```
+
+```{r}
+my.nn <- function(x, sample){
+  max_row <- nrow(sample)
+  #max_row <-200
+  n_col <- 3
+  i <- max_row
+  # pos es un vector que guarda la posición y la media calculada
+  # La distancia más pequeña es 0.
+  # Se inicializa a un valor elevado.
+  pos <- c(0, 10000)
+  
+  while (i > 0){
+    eu <- euclidean(x, sample[i, ])
+    if (eu < pos[2]){
+      pos <- c(i, eu)
+    }
+    i <- i -1
+  }
+  # Return the position of the second dataframe
+  return(pos[1])
+}
+# For testing purpose
+  #my.nn(left_gamers[1, 2:4], right_gamers[, 2:4])
+```
+
+```{r}
+my.nn.sample <- function( sample1, sample2, id_vector){
+   max_row <- nrow(sample1)
+   
+  # Right.paired continene el listado de las posiciones de los jugadores diestros más similares a los zurdos.
+  right.vector <-c()
+  i <- max_row
+  while (i > 0){
+    pos <- c()
+    if (i%%10 == 0){
+      print(paste('# de elementos restantes: ', i))
+    }
+    # Escogemos el vector de sample1 y buscamos el más cercano en sample2
+    pos <- my.nn(sample1[i,], sample2[, ])
+    # Con la posición, buscamos el identificador del jugador
+    right.vector <-c(right.vector, id_vector[pos])
+    i <- i -1
+  }
+  print('Proceso Finalizado')
+  return(right.vector)
+}
+
+```
+Vamos a preparar las muestras
+```{r}
+column_names <- c('ID', 'Weight', 'Height', 'Age')
+left_gamers <- fifa.df %>% filter(Club_Position!='GK' & Preffered_Foot=='Left') %>% select(all_of(column_names))
+right_gamers <- fifa.df %>% filter(Club_Position!='GK' & Preffered_Foot=='Right') %>% select(all_of(column_names))
+print(paste('# jugadores zurdos: ', nrow(left_gamers)))
+print(paste('# jugadores diestros: ', nrow(right_gamers)))
+```
+Vemos que hay tres veces más jugadores diestros que zurdos. Lanzamos el script.
+
+```{r}
+# right.paired es un vector que contiene los identificadores de los jugadores diestros más cercanos a los zurdos.
+right.paired <- c()
+right.paired  <- my.nn.sample(left_gamers[1:100, 2:4], right_gamers[1:500, 2:4], right_gamers[, 'ID'])
+```
+Una vez finalizado el proceso de cálculo, vamos a montar el dataframe de comparación de jugadores.
+```{r}
+
+
+
+right.paired.df <- as.data.frame(right.paired)
+names(right.paired.df) <- c('ID')
+right.paired.df <- join(right.paired.df, right_gamers)
+paired_gamers <- head(cbind(left_gamers[1:100,], right.paired.df))
+names(paired_gamers) <-c('ID.l', 'Weight.l', 'Height.l', 'Age.l',  'ID.r', 'Weight.r', 'Height.r', 'Age.r')
+head(paired_gamers) %>% kable() %>% kable_styling()
+
+
+```
+
+Se muestra la tabla con los primeros resultados de los jugadores zurdos y diestros. Se ha colocado el sufijo '.l' para los zurdos y el '.r' para los diestros.
+
 
 ## Muestras
 
