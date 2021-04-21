@@ -3,30 +3,31 @@ title: "Analítica descriptiva e inferencial del Fifa 2017"
 author: "Jesús González"
 date: "23/4/2021"
 output:
+  pdf_document:
+    
+    highlight: zenburn
+    toc: yes
   html_document:
+    
     highlight: default
     number_sections: yes
     theme: cosmo
     toc: yes
     toc_depth: 2
-    
-  pdf_document:
-    highlight: zenburn
-    toc: yes
-    
   word_document: default
 editor_options: 
   markdown: 
     wrap: 72
 ---
 
-```{r setup, include=FALSE}
+```{r kntir options, message=FALSE, warning=FALSE, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options(encoding = "UTF-8")
 ```
 
 ------------------------------------------------------------------------
 
-```{r}
+```{r Librerias, message=FALSE, warning=FALSE}
 library(tidyverse) 
 library(stringr) 
 library(dplyr) 
@@ -41,6 +42,10 @@ library(kableExtra)
 ```
 
 # Introducción
+
+Esta actividad se centra en el análisis estadístico descriptivo e inferencial del conjunto de datos del videojuego Fifa 2017, así como estadísticas reales de jugadores de fútbol. El conjunto inicial contiene más de 17.500 registros repartidos en 53 variables. 
+
+Se parte de un fichero, fifa_clean.csv, en donde ya se ha realizado tareas de limpieza y consolidación del dato. En esta actividad, nos interesa investigar la puntuación del jugador (Variable Rating) y otras variables como el control de la pelota (variable Ball_Control) y la técnica del jugador (variable Dribbling). Se asume que los datos contenidos en el fichero, *constituyen una muestra representativa de los jugadores de la última década (población).*
 
 # Lectura del fichero
 
@@ -243,7 +248,9 @@ planteada.
 
 **Propiedades del test a aplicar**:
 
--   **Test paramétrico o No paramétrico.** La normalidad de la muestra justificadas en el punto anterior nos permite afirmar que podemos aplicar un test paramétrico.
+-   **Test paramétrico o No paramétrico.** La normalidad de la muestra
+    justificadas en el punto anterior nos permite afirmar que podemos
+    aplicar un test paramétrico.
 
 -   **Test bilateral o Unilateral:** Si examinamos la hipótesis
     alternativa ($H_1$), estamos hablando de un contraste unilateral por
@@ -315,7 +322,7 @@ Mostramos los resultados para las tres variables de la muestra de
 jugadores
 
 ```{r}
-t2_sample_table %>% kable() %>% kable_styling()
+t2_sample_table %>% kable(format = "markdown") %>% kable_styling()
 ```
 
 ## Interpretación
@@ -330,16 +337,24 @@ zurdos obtienen mejores puntuaciones que los diestros]{.ul} para estas
 variables.
 
 # Comparación por pares
-Nos preguntamos si obtendríamos el mismo resultado si comparásemos los jugadores de campo zurdos
-con aquellos jugadores de campo diestros que tienen un peso, altura y edad similar. Para dar
-respuesta a esta pregunta, realizaremos un proceso similar al denominado propensity score matching, aunque
-un poco simplificado.
 
-El procedimiento se basa en calcular la distancia euclídea entre los vectores de jugadores zurdos y  diestros para cada una de las variables.
-El resultado serán dos muestras, una primera con los jugadores zurdos, y por cada posición de jugador, en la segunda muestra encontraremos el jugador diestro más cercano, existiendo una relación 1 a 1 por cada jugador de cada muestra. 
+Nos preguntamos si obtendríamos el mismo resultado si comparásemos los
+jugadores de campo zurdos con aquellos jugadores de campo diestros que
+tienen un peso, altura y edad similar. Para dar respuesta a esta
+pregunta, realizaremos un proceso similar al denominado propensity score
+matching, aunque un poco simplificado.
+
+El procedimiento se basa en calcular la distancia euclídea entre los
+vectores de jugadores zurdos y diestros para cada una de las variables.
+El resultado serán dos muestras, una primera con los jugadores zurdos, y
+por cada posición de jugador, en la segunda muestra encontraremos el
+jugador diestro más cercano, existiendo una relación 1 a 1 por cada
+jugador de cada muestra.
 
 ## Jugador más similar
-Implantamos la función euclídea que nos mostrará la distancia entre los vectores.
+
+Implantamos la función euclídea que nos mostrará la distancia entre los
+vectores.
 
 ```{r}
 euclidean <- function( x1, x2 ){
@@ -395,7 +410,9 @@ my.nn.sample <- function( sample1, sample2, id_vector){
 }
 
 ```
+
 Vamos a preparar las muestras
+
 ```{r}
 column_names <- c('ID', 'Weight', 'Height', 'Age')
 left_gamers <- fifa.df %>% filter(Club_Position!='GK' & Preffered_Foot=='Left') %>% select(all_of(column_names))
@@ -403,32 +420,34 @@ right_gamers <- fifa.df %>% filter(Club_Position!='GK' & Preffered_Foot=='Right'
 print(paste('# jugadores zurdos: ', nrow(left_gamers)))
 print(paste('# jugadores diestros: ', nrow(right_gamers)))
 ```
-Vemos que hay tres veces más jugadores diestros que zurdos. Lanzamos el script.
+
+Vemos que hay tres veces más jugadores diestros que zurdos. Lanzamos el
+script.
 
 ```{r}
 # right.paired es un vector que contiene los identificadores de los jugadores diestros más cercanos a los zurdos.
 right.paired <- c()
 right.paired  <- my.nn.sample(left_gamers[1:100, 2:4], right_gamers[1:500, 2:4], right_gamers[, 'ID'])
 ```
-Una vez finalizado el proceso de cálculo, vamos a montar el dataframe de comparación de jugadores.
-```{r}
-
-
-
-right.paired.df <- as.data.frame(right.paired)
-names(right.paired.df) <- c('ID')
-right.paired.df <- join(right.paired.df, right_gamers)
-paired_gamers <- head(cbind(left_gamers[1:100,], right.paired.df))
-names(paired_gamers) <-c('ID.l', 'Weight.l', 'Height.l', 'Age.l',  'ID.r', 'Weight.r', 'Height.r', 'Age.r')
-head(paired_gamers) %>% kable() %>% kable_styling()
-
-
-```
-
-Se muestra la tabla con los primeros resultados de los jugadores zurdos y diestros. Se ha colocado el sufijo '.l' para los zurdos y el '.r' para los diestros.
-
 
 ## Muestras
+
+Una vez finalizado el proceso de cálculo, vamos a montar el dataframe
+para poder comparar los jugadores zurdos y diestros según la salida del
+algoritmo.
+
+```{r}
+#right.paired.df <- as.data.frame(right.paired)
+#names(right.paired.df) <- c('ID')
+#right.paired.df <- join(right.paired.df, right_gamers)
+#paired_gamers <- head(cbind(left_gamers[1:100,], right.paired.df))
+#names(paired_gamers) <-c('ID.l', 'Weight.l', 'Height.l', 'Age.l',  'ID.r', 'Weight.r', 'Height.r', 'Age.r')
+#head(paired_gamers) %>% kable() %>% kable_styling()
+```
+
+Se muestra la tabla con los primeros resultados de los jugadores zurdos
+y diestros. Se ha colocado el sufijo '.l' para los zurdos y el '.r' para
+los diestros.
 
 ## Hipótesis nula y alternativa
 
