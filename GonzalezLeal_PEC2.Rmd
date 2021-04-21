@@ -43,14 +43,23 @@ library(kableExtra)
 
 # Introducción
 
-Esta actividad se centra en el análisis estadístico descriptivo e inferencial del conjunto de datos del videojuego Fifa 2017, así como estadísticas reales de jugadores de fútbol. El conjunto inicial contiene más de 17.500 registros repartidos en 53 variables. 
+Esta actividad se centra en el análisis estadístico descriptivo e
+inferencial del conjunto de datos del videojuego Fifa 2017, así como
+estadísticas reales de jugadores de fútbol. El conjunto inicial contiene
+más de 17.500 registros repartidos en 53 variables.
 
-Se parte de un fichero, fifa_clean.csv, en donde ya se ha realizado tareas de limpieza y consolidación del dato. En esta actividad, nos interesa investigar la puntuación del jugador (Variable Rating) y otras variables como el control de la pelota (variable Ball_Control) y la técnica del jugador (variable Dribbling). Se asume que los datos contenidos en el fichero, *constituyen una muestra representativa de los jugadores de la última década (población).*
+Se parte de un fichero, fifa_clean.csv, en donde ya se ha realizado
+tareas de limpieza y consolidación del dato. En esta actividad, nos
+interesa investigar la puntuación del jugador (Variable Rating) y otras
+variables como el control de la pelota (variable Ball_Control) y la
+técnica del jugador (variable Dribbling). Se asume que los datos
+contenidos en el fichero, *constituyen una muestra representativa de los
+jugadores de la última década (población).*
 
 # Lectura del fichero
 
 ```{r}
-fifa.df <- read.csv(file="./Data/fifa_clean.csv", encoding = "UTF8", stringsAsFactors = F)
+fifa.df <- read.csv(file="./Data/fifa_clean.csv", encoding = "UTF8", stringsAsFactors = F, header = T)
 paste0("Número de observaciones: ", nrow(fifa.df),". Número de variables: ", ncol(fifa.df))
 ```
 
@@ -70,25 +79,68 @@ for (col in column_name) {
 }
 ```
 
-Para el estudio, se va a investigar las variables: Rating, Ball_Control
-y Dribbling. Se va a realizar una subselección.
+Para el estudio, se va a investigar las variables: *Rating*,
+*Ball_Control* y *Dribbling*, por ello se va a realizar una subselección
+del dataset original, para quedarnos con las que necesitamos para
+nuestro estudio.
 
 ```{r}
 column_name <- c('ID', 'Name', 'Nationality', 'Preffered_Foot', 'Club_Position', 'Rating', 'Ball_Control', 'Dribbling' )
 fifa.df.sub <- fifa.df[, column_name]
 ```
 
-Revisamos las primeras líneas de las observaciones cargadas.
+Con el fin de poder comprobar si los datos se han cargado correctamente,
+revisamos las primeras líneas de las observaciones cargadas.
 
 ```{r}
 head(fifa.df.sub, 5)
 ```
+
+A continuación, se expone una descripción de las variables cargadas:
+
+-   **Name**: Nombre del jugador. Literal.
+
+-   **Nationality**: Nacionalidad del jugador. Se ha convertido a
+    factor.
+
+-   **Preffered_Foot**: Variable binaria que describe si el jugador es
+    diestro (valor right) o zurdo (valor left).
+
+-   **Clup_Position**: Posición de juego del jugador en club.
+
+-   **Rating**: Valoración global de juego del jugador. Tiene un rango
+    de valores de 0 a 100.
+
+-   **Ball_Control**: Valoración del control del balón del jugador.
+    Tiene un rango de valores de 0 a 100.
+
+-   **Dribbling**: Valoración de la técnica del jugador.Tiene un rango
+    de valores de 0 a 100.
 
 Revisamos las estadísticas básicas.
 
 ```{r}
 summary(fifa.df.sub)
 ```
+
+En la variable Nationality podemos ver que los grupos de jugadores que
+dominan el dataset (mayor frecuencia) son de nacionalidad inglesa,
+argentina y española. Aunque en Otros, tenemos una agrupación mayor que
+el top 6 de nacionalidades que aparecen descritas, por lo que no hay
+relevancia estadística.
+
+En cambio, Preffered_Foot si tenemos un balanceo hacia jugadores
+diestros en una proporción de 3 a 1 que se tiene que tener en cuenta
+respecto al sesgo que puede plantear.
+
+Para Club_Position, el valor Sub es mayoritario.
+
+En cuanto a las tres variables cuantitativas, Rating, Ball_control y
+Dribbling, la primera de ellas, presenta un buen centrado de la
+población respecto a la media, cosa que no ocurre en las otras dos, que
+se encuentra desbalanceadas hacia la izquierda.
+
+Vamos a estudiar estas variables con más atención.
 
 # Rating de los jugadores
 
