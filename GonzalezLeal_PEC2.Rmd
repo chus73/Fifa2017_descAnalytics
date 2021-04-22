@@ -300,7 +300,7 @@ H_{1}: & \mu_{left} > \mu_{right}
 $$
 
 Para cada una de las tres variables observadas, Rating, Ball control y
-Dribbling, y dentro del intervalo de confianza (NC) del 95 %.
+Dribbling, y [dentro del intervalo de confianza (NC) del 95 %]{.ul}.
 
 ## Método
 
@@ -326,8 +326,8 @@ planteada.
     aplicar un test paramétrico.
 
 -   **Test bilateral o Unilateral:** Si examinamos la hipótesis
-    alternativa ($H_1$), estamos hablando de un contraste unilateral por
-    la derecha.
+    alternativa ($H_1$), estamos hablando de un contraste [unilateral
+    por la derecha]{.ul}.
 
 -   **Homocedasticidad o heterocedasticidad:** Para resolver este
     parámetro nos fijaremos en la variabilidad de las muestras aplicando
@@ -386,7 +386,7 @@ for (col in column_names){
   t2_sample_table <- rbind(t2_sample_table, out)
 }
 names(t2_sample_table) <- c("Variable", "t-valor", "valor_critico")
-#t2_sample_table
+
 ```
 
 ## Tabla de resultados
@@ -408,15 +408,15 @@ valor crítico
 
 lo que permite rechazar la hipótesis nula aceptando que [los jugadores
 zurdos obtienen mejores puntuaciones que los diestros]{.ul} para estas
-variables.
+variables con un [nivel de confianza del 95%]{.ul}.
 
 # Comparación por pares
 
-Nos preguntamos si obtendríamos el mismo resultado si comparásemos los
-jugadores de campo zurdos con aquellos jugadores de campo diestros que
-tienen un peso, altura y edad similar. Para dar respuesta a esta
-pregunta, realizaremos un proceso similar al denominado
-`propensity score matching`, aunque un poco simplificado.
+Nos preguntamos si obtendríamos el mismo resultado si **comparásemos**
+los jugadores de campo zurdos con aquellos jugadores de campo diestros
+que tienen un peso, altura y edad con **características similares**.
+Para dar respuesta a esta pregunta, realizaremos un proceso similar al
+denominado `propensity score matching`, aunque un poco simplificado.
 
 El procedimiento se basa en calcular la **distancia euclídea** entre los
 vectores de jugadores zurdos y diestros para cada una de las variables.
@@ -500,12 +500,21 @@ Lanzamos el script.
 
 ```{r}
 # right.paired es un vector que contiene los identificadores de los jugadores diestros más cercanos a los zurdos.
+number_left <- 100
+number_right <- 500
 right.paired <- c()
-right.paired  <- my.nn.sample(left_gamers[1:100, 2:4], right_gamers[1:500, 2:4], right_gamers[, 'ID'])
+right.paired  <- my.nn.sample(left_gamers[1:number_left, 2:4], right_gamers[1:number_right, 2:4], right_gamers[, 'ID'])
 ```
 
 Para acortar el tiempo de cálculo se ha escogido una muestra de 100
 jugadores zurdos y de 500 dentro de la población de jugadores diestros.
+
+La dos muestras tienen que tener el mismo tamaño, dado que queremos
+tener **muestras apareadas**. Vamos a comprobarlo.
+
+```{r}
+nrow(left_gamers[1:number_left,]) == length(right.paired)
+```
 
 ## Muestras
 
@@ -517,7 +526,7 @@ algoritmo.
 right.paired.df <- as.data.frame(right.paired)
 right.paired.df <- right.paired.df %>% mutate(line_number = row_number())
 
-paired.df <- left_gamers[1:100,] %>% mutate(line_number = row_number())
+paired.df <- left_gamers[1:number_left,] %>% mutate(line_number = row_number())
 paired.df <- dplyr::inner_join(paired.df, right.paired.df)
 paired.df <- dplyr::inner_join(paired.df, right_gamers, by= c("right.paired" = 'ID'))
 paired.df$line_number <- NULL
@@ -533,13 +542,109 @@ los diestros.
 
 ## Hipótesis nula y alternativa
 
+Como conservamos la misma pregunta, que en el ejercicio anterior,
+exponemos la hipótesis nula como que no hay diferencias por el hecho de
+ser diestros o zurdos y la hipótesis alternativa como aquella en la que
+los zurdos consiguen mejor puntuación en las tres variables.
+
+Matemáticamente:
+
+$$
+\left\{
+\begin{array}{ll}
+H_{0}: &  \mu_{left} = \mu_{right}\\
+H_{1}: & \mu_{left} > \mu_{right}
+\end{array}
+\right.
+$$
+
+Para cada una de las tres variables observadas, Rating, Ball control y
+Dribbling, y dentro del intervalo de confianza (NC) del 95 %, pero
+teniendo en cuenta que trabajaremos con las diferencias entre las
+variables, tal y como se explica a continuación (contraste sobre la
+media unilateral por la derecha).
+
 ## Método
+
+Tal y como hemos ido viendo, vamos a realizar una **comparación de dos
+muestra apareadas sobre la media**.
 
 ## Cálculos
 
+En este tipo de contraste, en el que las muestras están vinculadas 1 a
+1, calculamos las diferencias entre ellas, reduciendo el problema a un
+contraste de una muestra con las diferencias de los dos jugadores.
+
+```{r}
+paired.df.sub <- paired.df %>% mutate(Weight =Weight.r - Weight.l) %>% mutate(Height =Height.r - Height.l)  %>% mutate(Age =Age.r - Age.l) %>% select(Weight, Height, Age)
+head(paired.df.sub)
+```
+
+La asunción de la normalidad ya la demostramos en anteriormente. Así que
+podemos aplicar directamente el estadístico.
+
+```{r}
+t_2_sample_by_dif <- function(df, column_name, NC){
+  # El intervalo de confianza es dado (95% por defecto)
+
+  alpha <- 1-NC
+  
+  # Cálculo del valor crítico
+  vc <- qnorm(alpha)
+  
+  # Cálculo de la media de las diferencias
+  mean_dif <- mean(df[, column_name])
+  
+  # Cálculo de la Desviación estándar
+  sd_dif <- sd(df[, column_name])
+  
+  # Número de muestras
+  n <- length(df[, column_name])
+
+  # Cálculo del estimador
+  t <- mean_dif / (sd_dif / sqrt(n))
+  
+  # Resultado
+  return(c(column_name, t, abs(vc)))
+}
+column_names <- c('Weight', 'Height', 'Age')
+t2_sample_table <- data.frame(matrix(ncol=3, nrow = 0))
+for (col in column_names){
+  out <- t_2_sample_by_dif(paired.df.sub, col, 0.95)
+  t2_sample_table <- rbind(t2_sample_table, out)
+}
+names(t2_sample_table) <- c("Variable", "t-valor", "valor_critico")
+
+#t2_sample_table 
+```
+
 ## Interpretación
 
+Mostremos el resultado del estimador
+
+```{r}
+t2_sample_table %>% kable() %>% kable_styling()
+```
+
+Si comparamos la salida de la anterior tabla, para las tres variables
+estudiadas el valor observado (t-valor) es menor que el valor crítico
+
+      t valor < valor crítico
+
+lo que no permite rechazar la hipótesis nula, y por tanto [no se puede
+apreciar diferencia estadística entre los jugadores y los diestros]{.ul}
+para estas variables, con un [nivel de confianza del 95%]{.ul}.
+
 ## Reflexión
+
+En este estudio hemos comparado las muestras entre jugadores 1 a 1,
+buscando jugadores con características parecidas en las variables de
+peso, altura y edad. En comparación con el estudio anterior, en el que
+comparábamos diferencias entre en cuanto a nivel de juego, en este caso
+[comparamos jugadores con identidades morfológicas parecidas]{.ul}. Es
+lógico pensar, que la solución no diga que no existen diferencias, lo
+que nos permite extraer la conclusión de que el proceso ha sido
+correctamente ejecutado.
 
 # Comparación entre clubes
 
