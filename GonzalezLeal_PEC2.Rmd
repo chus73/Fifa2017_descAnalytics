@@ -22,22 +22,27 @@ editor_options:
 
 ```{r kntir options, message=FALSE, warning=FALSE, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-options(encoding = "UTF-8")
+#options(encoding = "UTF-8")
 ```
 
 ------------------------------------------------------------------------
 
 ```{r Librerias, message=FALSE, warning=FALSE}
-library(tidyverse) 
-library(stringr) 
+library(ggplot2)
 library(dplyr) 
-library(lubridate) 
-library(ggplot2)
 library(gridExtra)
-library(grid)
-library(ggplot2)
-library(lattice)
 library(kableExtra)
+
+#library(tidyverse) 
+#library(stringr) 
+
+#library(lubridate) 
+
+
+#library(grid)
+
+#library(lattice)
+
 
 ```
 
@@ -145,7 +150,7 @@ Vamos a estudiar estas variables con más atención.
 # Rating de los jugadores
 
 En el primer apartado de este estudio, interesa investigar la variable
-Rating. Ésta, muestra la puntuación del jugador.
+Rating, que muestra la puntuación del jugador.
 
 ## Análisis visual
 
@@ -181,7 +186,7 @@ qqline(fifa.df.sub$Rating)
 ```
 
 En donde vemos que el error de los puntos de observación con respecto a
-la recta es mínimo.
+la recta es mínimo y localizados en los extremos.
 
 ## Intervalo de confianza
 
@@ -208,18 +213,20 @@ print(paste('Los niveles de confianza se encuentran definidos en el rango [',rou
 
 ```
 
-Hemos mostrado el número de observaciones para apoyar la normalizad por
-el teorema del límite centrar (TLC). Por lo tanto, y debido a que la
-distribución sigue una normal, el nivel crítico se calcula con la mitad
-de alfa para un nivel de confianza (NC) del 95%.
+Para acabar de confirmar la normalidad de la variable, a más a más de
+las observaciones de la serie, muy superior en número a los 30 valores,
+nos podemos apoyar en el **teorema del límite centrar** (TLC). Por lo
+tanto, y debido a que la distribución sigue una normal, por simetría, el
+nivel crítico se calcula con la mitad de alfa para un nivel de confianza
+(NC) del 95%.
 
 # Diferencias entre jugadores
 
-En este apartado, se va a comprobar si los jugadores zurdos tienen mejor
-control de la pelota (variable Ball_Control), valoración (Rating) y
-mejor Dribbling que lo diestros. Como paso previo vamos a diferenciar en
-dos subsets a los jugadores zurdos de los diestros, eliminando a los
-porteros (Código GK de la variable Club_Position).
+En este apartado, se va a comprobar si [los jugadores zurdos tienen
+mejor control de la pelota (variable Ball_Control), valoración (Rating)
+y mejor Dribbling que lo diestros]{.ul}. Como paso previo vamos a
+diferenciar en dos subsets a los jugadores zurdos de los diestros,
+eliminando a los porteros (Código GK de la variable Club_Position).
 
 ```{r}
 
@@ -231,9 +238,9 @@ right_gamers <- fifa.df.sub %>% filter(Club_Position!='GK' & Preffered_Foot=='Ri
 ## Pregunta de investigación
 
 La pregunta que se quiere responder es si los valores de las tres
-variables a estudiar son significativamente mayores entre los jugadores
-zurdos y los diestros. Estamos ante un caso de contraste unilateral de
-dos muestras poblacionales independientes.
+variables a estudiar son **significativamente mayores** entre los
+jugadores zurdos y los diestros. Estamos ante un caso de contraste
+unilateral de dos muestras poblacionales independientes.
 
 Por tanto, definiendo la hipótesis nula como que no hay diferencias por
 el hecho de ser diestros o zurdos, tendríamos que la hipótesis
@@ -243,6 +250,9 @@ en las tres variables.
 Distribución unilateral por la derecha.
 
 ## Representación visual
+
+Veamos el comportamiento de las tres variables del estudio en función de
+si los jugadores son zurdos o diestros
 
 ```{r}
 left_gamers$type <- 'left'
@@ -259,6 +269,17 @@ p3 <- ggplot(data=data,aes(x=type, y=Dribbling,color=type))+geom_boxplot()
 grid.arrange(p1, p2, p3, ncol=3, top= 'Boxplox Compare main attributes')
 
 ```
+
+A nivel general, vemos como en el caso de los zurdos, las medianas de
+las tres variables están por encima en puntuación que la de los diestros
+(valor superior indica mejor puntuación). Es destacable también, la
+presencia de valores extremos inferiores para el control de la pelota y
+del juego, sobretodo en jugadores zurdos. Para estas dos variables,
+tenemos también valores extremos superiores para los jugadores zurdos,
+lo que indica que hay jugadores zurdos con muy buenas puntuaciones en
+control del balón y juego. En cuanto al rating, los valores extremos
+superiores e inferiores se encuentran equilibrados para los dos tipos de
+jugadores.
 
 ## Hipótesis nula y alternativa
 
@@ -289,7 +310,7 @@ planteada.
 
 -   **Tipo de contraste**. En este estudio estamos valorando dos
     muestras independientes de tamaños diferentes. Para ello
-    realizaremos un contraste sobre la media.
+    realizaremos un **contraste sobre la media**.
 
 -   **Normalidad de la muestra**: El número de muestras es
     suficientemente grande como para poder aplicar el [teorema del
@@ -312,7 +333,7 @@ planteada.
     parámetro nos fijaremos en la variabilidad de las muestras aplicando
     un F test.
 
-```{r  echo=FALSE, messages=FALSE}
+```{r echo=TRUE, messages=FALSE}
 columns_names <- c('Rating', 'Ball_Control', 'Dribbling') 
 var_table <- data.frame(matrix(ncol=5, nrow = 0)) 
 column_names_table <- c('Variable', 'F test', 'p valor', 'NC1', 'NC2')
@@ -324,9 +345,9 @@ colnames(var_table) <- column_names_table
 var_table
 ```
 
-El test F de Snedecor establece como hipótesis nula la homogeneidad de
-las varianzas. Los p-valores encontrados nos indican que podemos
-rechazar la \$H\_{0}\$, encontrándonos con que las muestras de las tres
+El test **F de Snedecor** establece como hipótesis nula la homogeneidad
+de las varianzas. Los p-valores encontrados nos indican que podemos
+rechazar la $H_{0}$, encontrándonos con que las muestras de las tres
 variables observadas presentan **heterocedasticidad**.
 
 ## Cálculos
@@ -374,13 +395,14 @@ Mostramos los resultados para las tres variables de la muestra de
 jugadores
 
 ```{r}
-t2_sample_table %>% kable(format = "markdown") %>% kable_styling()
+t2_sample_table %>% kable() %>% kable_styling()
 ```
 
 ## Interpretación
 
-Como podemos interpretar de los resultados, en las tres variables
-estudiadas el valor observado (t-valor) es mayor que el valor crítico
+Como podemos observar de los resultados de la tabla anterior, en las
+tres variables estudiadas el valor observado (t-valor) es mayor que el
+valor crítico
 
       t valor > valor crítico
 
@@ -393,10 +415,10 @@ variables.
 Nos preguntamos si obtendríamos el mismo resultado si comparásemos los
 jugadores de campo zurdos con aquellos jugadores de campo diestros que
 tienen un peso, altura y edad similar. Para dar respuesta a esta
-pregunta, realizaremos un proceso similar al denominado propensity score
-matching, aunque un poco simplificado.
+pregunta, realizaremos un proceso similar al denominado
+`propensity score matching`, aunque un poco simplificado.
 
-El procedimiento se basa en calcular la distancia euclídea entre los
+El procedimiento se basa en calcular la **distancia euclídea** entre los
 vectores de jugadores zurdos y diestros para cada una de las variables.
 El resultado serán dos muestras, una primera con los jugadores zurdos, y
 por cada posición de jugador, en la segunda muestra encontraremos el
@@ -473,14 +495,17 @@ print(paste('# jugadores zurdos: ', nrow(left_gamers)))
 print(paste('# jugadores diestros: ', nrow(right_gamers)))
 ```
 
-Vemos que hay tres veces más jugadores diestros que zurdos. Lanzamos el
-script.
+Vemos que hay [tres veces más jugadores diestros que zurdos]{.ul}.
+Lanzamos el script.
 
 ```{r}
 # right.paired es un vector que contiene los identificadores de los jugadores diestros más cercanos a los zurdos.
 right.paired <- c()
 right.paired  <- my.nn.sample(left_gamers[1:100, 2:4], right_gamers[1:500, 2:4], right_gamers[, 'ID'])
 ```
+
+Para acortar el tiempo de cálculo se ha escogido una muestra de 100
+jugadores zurdos y de 500 dentro de la población de jugadores diestros.
 
 ## Muestras
 
@@ -489,12 +514,17 @@ para poder comparar los jugadores zurdos y diestros según la salida del
 algoritmo.
 
 ```{r}
-#right.paired.df <- as.data.frame(right.paired)
-#names(right.paired.df) <- c('ID')
-#right.paired.df <- join(right.paired.df, right_gamers)
-#paired_gamers <- head(cbind(left_gamers[1:100,], right.paired.df))
-#names(paired_gamers) <-c('ID.l', 'Weight.l', 'Height.l', 'Age.l',  'ID.r', 'Weight.r', 'Height.r', 'Age.r')
-#head(paired_gamers) %>% kable() %>% kable_styling()
+right.paired.df <- as.data.frame(right.paired)
+right.paired.df <- right.paired.df %>% mutate(line_number = row_number())
+
+paired.df <- left_gamers[1:100,] %>% mutate(line_number = row_number())
+paired.df <- dplyr::inner_join(paired.df, right.paired.df)
+paired.df <- dplyr::inner_join(paired.df, right_gamers, by= c("right.paired" = 'ID'))
+paired.df$line_number <- NULL
+
+names(paired.df) <-c('ID.l', 'Weight.l', 'Height.l', 'Age.l',  'ID.r', 'Weight.r', 'Height.r', 'Age.r')
+
+head(paired.df) %>% kable() %>% kable_styling()
 ```
 
 Se muestra la tabla con los primeros resultados de los jugadores zurdos
