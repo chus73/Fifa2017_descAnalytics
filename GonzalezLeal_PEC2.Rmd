@@ -648,12 +648,103 @@ correctamente ejecutado.
 
 # Comparación entre clubes
 
+En este capítulo del estudio, buscamos calcular si el [porcentaje de
+jugadores con un Rating superior a 90]{.ul} es **diferente** entre los
+clubes de Barcelona y Madrid, con un [nivel de confianza del 97%.]{.ul}
+
+Comenzamos por preparar los datos.
+
+```{r}
+rating_bcn <- fifa.df[fifa.df$Club == 'FC Barcelona', 'Rating']
+rating_md <- fifa.df[fifa.df$Club == 'Real Madrid', 'Rating']
+print(paste('# Casos del FC Barcelona: ', length(rating_bcn)))
+print(paste('# Casos del Real Madrid: ', length(rating_md)))
+```
+
+Vamos a calcular las proporciones según los parámetros de enunciado.
+
+```{r}
+limit <- 90
+p_bcn <- length(rating_bcn[rating_bcn > limit] ) / length(rating_bcn)
+p_md <- length(rating_md[rating_md > limit] ) / length(rating_md)
+print(paste('Rating del FC Barcelona: ', p_bcn))
+print(paste('Rating del Real Madrid: ', p_md))
+```
+
 ## Hipótesis nula y alternativa
+
+La pregunta inicial, busca comprobar si existe diferencia entre la
+proporción de jugadores de ambos clubes cuando el valor de la variable
+Rating \> 90. Estamos ante un contraste de Proporciones bilateral, en el
+que definimos la hipótesis nula \$H\_{0}\$ como que las proporciones son
+iguales, y la hipótesis alternativa \$H\_{1}\$ con el caso contrario,
+todo ello [dentro del intervalo de confianza (NC) del 97 %]{.ul}..
+
+Esquemáticamente es:
+
+$$
+\left\{
+\begin{array}{ll}
+H_{0}: & p_{bcn} = p_{md}\\
+H_{1}: & p_{bcn} \neq p_{md}
+\end{array}
+\right.
+$$
 
 ## Método
 
+Ya lo hemos comentado antes, pero nos encontramos ante un **contraste de
+Proporciones bilateral**. La normalidad queda asegurada por el Teorema
+del Límite Central al tener un número de observaciones [ligeramente
+superior]{.ul} a 30.
+
 ## Cálculos
 
+Realizamos los cálculos del estimador.
+
+```{r}
+
+t_2_ind_prop <- function(p1, n1, p2, n2, NC){
+  
+  # Simetría, implica la mitad de alpha.
+  alpha <- (1-NC)/2
+  
+  # Cálculo del valor crítico
+  vc <- qnorm(alpha)
+  
+  # Cálculo de p
+  p <- (n1*p1 + n2*p2) / (n1+n2)
+  
+  # Cálculo del estimador
+  z <- (p1-p2) / sqrt(p*(1-p) * (1/n1 + 1/n2))
+  
+  # Cálulo del p_value
+  p_value <- pnorm(z, lower.tail = T)
+  
+  return(c(z, vc, p_value, alpha))
+}
+
+# Fijamos el Nivel crítico del test.
+NC <- 0.97
+
+t2_out <- t_2_ind_prop(p_bcn, length(rating_bcn), p_md, length(rating_md), NC)
+t2_out <- data.frame('z_value' = t2_out[1], 'vc' = t2_out[2], 'p_value' = t2_out[3], 'alpha' = t2_out[4])
+```
+
 ## Resultados e interpretación
+
+Veamos los resultados obtenidos.
+
+```{r}
+t2_out %>% kable() %>% kable_styling()
+```
+
+Con los valores encontrados no podemos rechazar la hipótesis nula debido
+a que el valor del estimador es inferior al valor crítico (en términos
+absolutos), y el p valor no es inferior al valor de alfa.
+
+Por tanto, [no podemos determinar que haya diferencia a nivel de Rating
+entre los jugadores de los dos clubes, Barcelona y Madrid, con un nivel
+de confianza del 97%]{.ul}.
 
 # Resumen ejecutivo
