@@ -4,9 +4,10 @@ author: "Jesús González"
 date: "23/4/2021"
 output:
   pdf_document:
-    
+    latex_engine: xelatex
     highlight: zenburn
     toc: yes
+    number_sections: yes
   html_document:
     
     highlight: default
@@ -354,8 +355,8 @@ variables observadas presentan **heterocedasticidad**.
 
 Ahora procederemos a calcular el estadístico de contraste, el valor
 crítico y el valor de $p$, teniendo en cuenta todo las características
-de la muestra que hemos visto anteriormente (Contraste de dos muestras
-independientes sobre la media con varianzas desconocidas).
+de la muestra que hemos visto anteriormente (**contraste de dos muestras
+independientes sobre la media con varianzas desconocidas**).
 
 ```{r}
 t_2_sample_unknow_var <- function(df, column_name, NC){
@@ -500,7 +501,9 @@ print(paste('# jugadores diestros: ', nrow(right_gamers)))
 ```
 
 Vemos que hay [tres veces más jugadores diestros que zurdos]{.ul}.
-Lanzamos el script.
+
+Lanzamos el script que nos va a permitir encontrar los jugadores
+diestros más similares en cuanto a morfología.
 
 ```{r}
 # right.paired es un vector que contiene los identificadores de los jugadores diestros más cercanos a los zurdos.
@@ -635,10 +638,13 @@ t_2_sample_by_dif <- function(df, column_name, NC){
   # Resultado
   return(c(column_name, t, abs(vc)))
 }
+# Parámetros
+NC <- 0.95
 column_names <- c('Rating')
+
 t2_sample_table <- data.frame(matrix(ncol=3, nrow = 0))
 for (col in column_names){
-  out <- t_2_sample_by_dif(paired.df.sub, col, 0.95)
+  out <- t_2_sample_by_dif(paired.df.sub, col, NC)
   t2_sample_table <- rbind(t2_sample_table, out)
 }
 names(t2_sample_table) <- c("Variable", "t-valor", "valor_critico")
@@ -672,9 +678,9 @@ las variables de peso, altura y edad. Posteriormente, hemos
 complementado el estudio confrontando este par de jugadores zurdos y
 diestros, con [identidades morfológicas parecidas]{.ul}, con los valores
 de sus variables de Rating, medida que resume la calidad de juego de
-estos jugadores. El resultado ha sido que hay evidencia estadística para
-poder afirmar que los jugadores zurdos son mejores que los diestros
-dentro del nivel de confianza del 95%.
+estos jugadores. El resultado obtenido ha sido [que hay evidencia
+estadística]{.ul} para poder afirmar que los jugadores zurdos son
+mejores que los diestros dentro del nivel de confianza del 95%.
 
 # Comparación entre clubes
 
@@ -784,21 +790,34 @@ sobre los datos de los jugadores del juego Fifa 2017, como muestra
 representativa de los jugadores de fútbol.
 
 Primeramente hemos investigado la variable Rating de los jugadores,
-realizando un análisis visual de la misma y encontrando sus intervalos
-de confianza.
+realizando un análisis visual de la misma y encontrando sus **intervalos
+de confianza**.
 
 A continuación, nos hemos centrado en un estudio sobre las diferencias
 entre los jugadores zurdos y diestros. Para ello, hemos trabajado sobre
 tres de sus variables que determinan la calidad del juego, formulando
 las preguntas de investigación (una por cada variable), y planteando la
-hipótesis nula y alternativa. El estadístico utilizado se basa en un
-contraste unilateral de las dos muestras poblacionales independientes,
-que nos ha llevado a la conclusión de que los jugadores zurdos obtienen
-mejores puntuaciones que los diestros para las variables analizadas con
-un nivel de confianza del 95%.
+hipótesis nula y alternativa. El estadístico utilizado, se basa en un
+**contraste unilateral de las dos muestras poblacionales
+independientes**, que nos ha llevado a la conclusión de que los
+jugadores zurdos obtienen mejores puntuaciones que los diestros para las
+variables analizadas, con un nivel de confianza del 95%.
 
-En el siguiente capítulo de nuestro estudio, hemos continuado comparando
-la población de jugadores zurdos respecto a los diestros, pero
-emparejando a jugadores con similares características morfológicas.
-Estamos ante un estudio de dos muestras poblaciones emparejadas sobre la
-media.
+En el siguiente capítulo de nuestro estudio, hemos continuado la
+comparación de la población de jugadores zurdos respecto a los diestros.
+Para ello, hemos emparejando a cada jugador zurdo con otro diestro de
+similares características morfológicas, reduciendo el estudio a una de
+las variables que determina la calidad del juego. Por lo tanto, se ha
+realizado un **contraste de dos muestras poblaciones emparejadas sobre
+la media**. El resultado obtenido, ha mostrado que existe evidencia
+estadística para afirmar que los jugadores zurdos obtienen mejor
+puntuación, con un nivel de confianza fijado al 95%.
+
+Finalmente, en el último capítulo hemos realizado la comparación
+respecto a los jugadores de dos clubes, El Barcelona y el Madrid. Para
+ello, se ha realizado una selección de los mejores jugadores cuyo
+Ranking es superior a 90, respecto al total de los jugadores de la
+plantilla de ambos equipos. Por lo tanto, se ha realizado **un contraste
+de proporciones de dos muestras bilateral**, el resultado de la cual nos
+dice que no se ha apreciado evidencia estadística para afirmar que un
+equipo es suprior al otro, con un 97% de nivel de confianza.
