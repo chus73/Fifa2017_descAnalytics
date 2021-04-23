@@ -3,11 +3,12 @@ title: "Analítica descriptiva e inferencial del Fifa 2017"
 author: "Jesús González"
 date: "23/4/2021"
 output:
-  pdf_document:
-    latex_engine: xelatex
+  pdf_document: 
     highlight: zenburn
     toc: yes
     number_sections: yes
+    fig_caption: yes
+    fig_crop: no
   html_document:
     
     highlight: default
@@ -19,6 +20,7 @@ output:
 editor_options: 
   markdown: 
     wrap: 72
+always_allow_html: true
 ---
 
 ```{r kntir options, message=FALSE, warning=FALSE, include=FALSE}
@@ -33,18 +35,6 @@ library(ggplot2)
 library(dplyr) 
 library(gridExtra)
 library(kableExtra)
-
-#library(tidyverse) 
-#library(stringr) 
-
-#library(lubridate) 
-
-
-#library(grid)
-
-#library(lattice)
-
-
 ```
 
 # Introducción
@@ -65,8 +55,10 @@ jugadores de la última década (población).*
 # Lectura del fichero
 
 ```{r}
-fifa.df <- read.csv(file="./Data/fifa_clean.csv", encoding = "UTF8", stringsAsFactors = F, header = T)
-paste0("Número de observaciones: ", nrow(fifa.df),". Número de variables: ", ncol(fifa.df))
+fifa.df <- read.csv(file="./Data/fifa_clean.csv", encoding = "UTF8",
+                    stringsAsFactors = F, header = T)
+paste0("Número de observaciones: ", nrow(fifa.df),". Número de variables: ", 
+       ncol(fifa.df))
 ```
 
 Verificamos si existen duplicados en el identificador.
@@ -79,7 +71,8 @@ if (length(fifa.df$ID) == length(unique(fifa.df$ID))) {
 Convertimos a factor los literales.
 
 ```{r}
-column_name <- c('Nationality','National_Position', 'Club', 'Club_Position', 'Preffered_Foot', 'Preffered_Position', 'Work_Rate')
+column_name <- c('Nationality','National_Position', 'Club', 'Club_Position',
+                 'Preffered_Foot', 'Preffered_Position', 'Work_Rate')
 for (col in column_name) {
   fifa.df[,col] <- factor(fifa.df[,col])
 }
@@ -91,7 +84,8 @@ del dataset original, para quedarnos con las que necesitamos para
 nuestro estudio.
 
 ```{r}
-column_name <- c('ID', 'Name', 'Nationality', 'Preffered_Foot', 'Club_Position', 'Rating', 'Ball_Control', 'Dribbling' )
+column_name <- c('ID', 'Name', 'Nationality', 'Preffered_Foot', 'Club_Position',
+                 'Rating', 'Ball_Control', 'Dribbling' )
 fifa.df.sub <- fifa.df[, column_name]
 ```
 
@@ -210,7 +204,9 @@ SE <- sd / sqrt(n)
 z <- qnorm(alpha/2, lower.tail = F)
 L <- mean(fifa.df.sub$Rating) - z*SE
 U <- mean(fifa.df.sub$Rating) + z*SE
-print(paste('Los niveles de confianza se encuentran definidos en el rango [',round(L, 2),', ', round(U, 2), '] para un nivel de confianza del ', NC*100, '%')) 
+cat(paste('Los niveles de confianza se encuentran definidos \n', 
+            'en el rango [',round(L, 2),', ', round(U, 2), '] \n',
+            'para un nivel de confianza del ', NC*100, '%')) 
 
 ```
 
@@ -224,16 +220,21 @@ nivel crítico se calcula con la mitad de alfa para un nivel de confianza
 # Diferencias entre jugadores
 
 En este apartado, se va a comprobar si [los jugadores zurdos tienen
-mejor control de la pelota (variable Ball_Control), valoración (Rating)
-y mejor Dribbling que lo diestros]{.ul}. Como paso previo vamos a
-diferenciar en dos subsets a los jugadores zurdos de los diestros,
-eliminando a los porteros (Código GK de la variable Club_Position).
+mejor control de la pelota]{.ul} (variable Ball_Control)[,
+valoración]{.ul} (Rating) [y mejor Dribbling que lo diestros]{.ul}. Como
+paso previo vamos a diferenciar en dos subsets a los jugadores zurdos de
+los diestros, eliminando a los porteros (Código GK de la variable
+Club_Position).
 
 ```{r}
 
-left_gamers <- fifa.df.sub %>% filter(Club_Position!='GK' & Preffered_Foot=='Left') %>% select('ID', 'Rating', 'Ball_Control', 'Dribbling')
+left_gamers <- fifa.df.sub %>%
+  filter(Club_Position!='GK' & Preffered_Foot=='Left') %>%
+  select('ID', 'Rating', 'Ball_Control', 'Dribbling')
 
-right_gamers <- fifa.df.sub %>% filter(Club_Position!='GK' & Preffered_Foot=='Right') %>% select('ID', 'Rating', 'Ball_Control', 'Dribbling')
+right_gamers <- fifa.df.sub %>% 
+  filter(Club_Position!='GK' & Preffered_Foot=='Right') %>%
+  select('ID', 'Rating', 'Ball_Control', 'Dribbling')
 ```
 
 ## Pregunta de investigación
@@ -301,7 +302,8 @@ H_{1}: & \mu_{left} > \mu_{right}
 $$
 
 Para cada una de las tres variables observadas, Rating, Ball control y
-Dribbling, y [dentro del intervalo de confianza (NC) del 95 %]{.ul}.
+Dribbling, y [dentro del intervalo de confianza]{.ul} ([NC) del 95
+%]{.ul}.
 
 ## Método
 
@@ -340,7 +342,9 @@ var_table <- data.frame(matrix(ncol=5, nrow = 0))
 column_names_table <- c('Variable', 'F test', 'p valor', 'NC1', 'NC2')
 for (col in columns_names){
   out <- var.test(x=left_gamers[,col], y=right_gamers[,col])
-  var_table <- rbind(var_table, c(col, round(out$statistic,4), out$p.value, round(out$conf.int[1],4), round(out$conf.int[2],4)))
+  var_table <- rbind(var_table, c(col, round(out$statistic,4),
+                                  out$p.value, round(out$conf.int[1],4),
+                                  round(out$conf.int[2],4)))
 }
 colnames(var_table) <- column_names_table
 var_table
@@ -408,7 +412,7 @@ valor crítico
       t valor > valor crítico
 
 lo que permite rechazar la hipótesis nula aceptando que [los jugadores
-zurdos obtienen mejores puntuaciones que los diestros]{.ul} para estas
+zurdos obtienen mejores puntuaciones]{.ul} que los diestros para estas
 variables con un [nivel de confianza del 95%]{.ul}.
 
 # Comparación por pares
@@ -470,7 +474,8 @@ my.nn <- function(x, sample){
 my.nn.sample <- function( sample1, sample2, id_vector){
    max_row <- nrow(sample1)
    
-  # Right.paired continene el listado de las posiciones de los jugadores diestros más similares a los zurdos.
+  # Right.paired continene el listado de las posiciones de los jugadores diestros
+   # más similares a los zurdos.
   right.vector <-c()
   i <- max_row
   while (i > 0){
@@ -494,8 +499,12 @@ Vamos a preparar las muestras
 
 ```{r}
 column_names <- c('ID', 'Weight', 'Height', 'Age')
-left_gamers <- fifa.df %>% filter(Club_Position!='GK' & Preffered_Foot=='Left') %>% select(all_of(column_names))
-right_gamers <- fifa.df %>% filter(Club_Position!='GK' & Preffered_Foot=='Right') %>% select(all_of(column_names))
+left_gamers <- fifa.df %>% 
+  filter(Club_Position!='GK' & Preffered_Foot=='Left') %>% 
+  select(all_of(column_names))
+right_gamers <- fifa.df %>% 
+  filter(Club_Position!='GK' & Preffered_Foot=='Right') %>% 
+  select(all_of(column_names))
 print(paste('# jugadores zurdos: ', nrow(left_gamers)))
 print(paste('# jugadores diestros: ', nrow(right_gamers)))
 ```
@@ -506,11 +515,14 @@ Lanzamos el script que nos va a permitir encontrar los jugadores
 diestros más similares en cuanto a morfología.
 
 ```{r}
-# right.paired es un vector que contiene los identificadores de los jugadores diestros más cercanos a los zurdos.
+# right.paired es un vector que contiene los identificadores de los jugadores
+# diestros más cercanos a los zurdos.
 number_left <- 100
 number_right <- 500
 right.paired <- c()
-right.paired  <- my.nn.sample(left_gamers[1:number_left, 2:4], right_gamers[1:number_right, 2:4], right_gamers[, 'ID'])
+right.paired  <- my.nn.sample(left_gamers[1:number_left, 2:4], 
+                              right_gamers[1:number_right, 2:4],
+                              right_gamers[, 'ID'])
 ```
 
 Para acortar el tiempo de cálculo se ha escogido una muestra de 100
@@ -534,20 +546,25 @@ right.paired.df <- as.data.frame(right.paired)
 right.paired.df <- right.paired.df %>% mutate(line_number = row_number())
 
 # Recuperamos el Rating de los jugadores diestros
-right.paired.df <- dplyr::inner_join(right.paired.df, fifa.df[,c('ID', 'Rating')], by=c('right.paired'='ID'))
+right.paired.df <- dplyr::inner_join(right.paired.df, fifa.df[,c('ID', 'Rating')],
+                                     by=c('right.paired'='ID'))
 
-paired.df <- left_gamers[1:number_left,] %>% mutate(line_number = row_number())
+paired.df <- left_gamers[1:number_left,] %>%
+  mutate(line_number = row_number())
 
 # Recuperamos el Rating de los jugadores zurdos
-paired.df <- dplyr::inner_join(paired.df, fifa.df[,c('ID', 'Rating')], by=c('ID'='ID'))
+paired.df <- dplyr::inner_join(paired.df, fifa.df[,c('ID', 'Rating')],
+                               by=c('ID'='ID'))
 
 # Join de los dos datasets
 paired.df <- dplyr::inner_join(paired.df, right.paired.df, by= 'line_number')
-paired.df <- dplyr::inner_join(paired.df, right_gamers, by= c("right.paired" = 'ID'))
+paired.df <- dplyr::inner_join(paired.df, right_gamers, 
+                               by= c("right.paired" = 'ID'))
 # Ya podemos eliminar el campo de la posición
 paired.df$line_number <- NULL
 
-names(paired.df) <-c('ID.l', 'Weight.l', 'Height.l', 'Age.l', 'Rating.l', 'ID.r', 'Rating.r', 'Weight.r', 'Height.r', 'Age.r')
+names(paired.df) <-c('ID.l', 'Weight.l', 'Height.l', 'Age.l', 'Rating.l', 
+                     'ID.r', 'Rating.r', 'Weight.r', 'Height.r', 'Age.r')
 
 head(paired.df) %>% kable() %>% kable_styling()
 ```
@@ -566,7 +583,8 @@ Comprobado este punto, es hora de dejar limpio el dataset con sólo las
 variables necesarias para el estudio.
 
 ```{r}
-paired.df[, c('ID.l', 'Weight.l', 'Height.l', 'Age.l', 'ID.r',  'Weight.r', 'Height.r', 'Age.r')] <- NULL
+paired.df[, c('ID.l', 'Weight.l', 'Height.l', 'Age.l',
+              'ID.r',  'Weight.r', 'Height.r', 'Age.r')] <- NULL
 head(paired.df)
 ```
 
@@ -666,7 +684,7 @@ el valor observado (t-valor) es mayor que el valor crítico
       t valor > valor crítico
 
 lo que permite rechazar la hipótesis nula, y por tanto [se puede
-apreciar diferencia estadística entre los jugadores zurdos y los
+apreciar diferencia estadística entre los jugadores]{.ul} [zurdos y los
 diestros]{.ul} para estas variables, con un [nivel de confianza del
 95%]{.ul}.
 
@@ -764,7 +782,8 @@ t_2_ind_prop <- function(p1, n1, p2, n2, NC){
 NC <- 0.97
 
 t2_out <- t_2_ind_prop(p_bcn, length(rating_bcn), p_md, length(rating_md), NC)
-t2_out <- data.frame('z_value' = t2_out[1], 'vc' = t2_out[2], 'p_value' = t2_out[3], 'alpha' = t2_out[4])
+t2_out <- data.frame('z_value' = t2_out[1], 'vc' = t2_out[2], 
+                     'p_value' = t2_out[3], 'alpha' = t2_out[4])
 ```
 
 ## Resultados e interpretación
@@ -780,8 +799,8 @@ a que el valor del estimador es inferior al valor crítico (en términos
 absolutos), y el p valor no es inferior al valor de alfa.
 
 Por tanto, [no podemos determinar que haya diferencia a nivel de Rating
-entre los jugadores de los dos clubes, Barcelona y Madrid, con un nivel
-de confianza del 97%]{.ul}.
+entre los jugadores de los dos clubes]{.ul}, [Barcelona y Madrid, con un
+nivel de confianza del 97%]{.ul}.
 
 # Resumen ejecutivo
 
